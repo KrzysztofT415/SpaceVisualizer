@@ -1,0 +1,150 @@
+:root {
+    --green: #8bc34a;
+    --red: #f44336;
+    --brown: #5d4037;
+
+    --secondaryLE: #ffffba;
+    --secondaryL: #ffff72;
+    --secondaryM: #ffeb3b;
+    --secondaryD: #c8b900;
+
+    --primaryL: #ffc947;
+    --primaryM: #ff9800;
+    --primaryD: #c66900;
+
+    --white: #eceff1;
+    --whiteD: #babdbe;
+    --darkL: #61656d;
+    --darkM: #373b42;
+    --darkD: #11151b;
+}
+
+::selection {
+    color: var(--secondaryLE);
+    background: var(--darkD);
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    /* font-family: 'Merriweather Sans', serif; */
+    font-size: 16px;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    /* overflow: hidden; */
+}
+
+#panel {
+    background-color: var(--whiteD);
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#canvas-container {
+    background-color: var(--darkM);
+    flex: 1;
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: auto;
+}
+
+#canvas {
+    width: 100%;
+    height: 100%;
+}
+
+#panel * {
+    padding: 5px 10px;
+    margin: 5px 4px;
+    width: fit-content;
+    height: 2.5rem;
+    text-align: center;
+    align-content: center;
+    flex: 1 1 auto;
+}
+
+.off {
+    display: none;
+}
+
+.highlight {
+    background-color: var(--secondaryLE);
+}
+
+input {
+    text-align: center;
+    align-content: center;
+    white-space: nowrap;
+    resize: none;
+    overflow: hidden;
+}
+
+input[type='checkbox'] {
+    width: 1.5rem;
+    height: 1.5rem;
+    min-width: 1.5rem;
+}
+
+input[type='range'] {
+    width: 120px;
+    margin: 10px 0;
+}
+
+input[type='number'] {
+    min-width: 3.5rem;
+    max-width: 3.5rem;
+    -moz-appearance: textfield;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+div {
+    background-color: var(--whiteD);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    flex-direction: column;
+    position: absolute;
+    background-color: var(--white);
+    display: inline-block;
+    height: fit-content;
+    min-height: 18vh;
+    margin: 0 8px;
+    z-index: -1;
+}
+
+.dropdown-content button {
+    color: black;
+    text-decoration: none;
+    display: block;
+    width: 90%;
+    border: none;
+    background: none;
+}
+
+.dropdown-content button:hover {
+    background-color: var(--whiteD);
+}
+
+.dropdown:hover .dropdown-content {
+    z-index: 1;
+}

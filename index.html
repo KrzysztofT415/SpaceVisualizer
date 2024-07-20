@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>SpaceVisualizer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <script type="module" src="script.js" defer></script>
+
+    <body id="body">
+        <div id="panel">
+            <div class="stay">
+                <button onclick="reseed();restart()">&#x21bb;</button>
+                <button class="stay" id="voronoi" onclick="reseed();switchMode('voronoi')">Voronoi Diagram</button>
+                <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad-Tree</button>
+                <button class="stay" id="simplex" onclick="reseed();switchMode('simplex')">OpenSimplex Noise</button>
+            </div>
+            <div class="off voronoi quad">
+                <label>Animate: </label>
+                <input id="animate" value="1" type="checkbox" onchange="resume()" checked />
+            </div>
+            <div class="off voronoi quad">
+                <label>Points: </label>
+                <input id="points_num" type="number" placeholder="100" />
+                <button onclick="restart(false)">&#43;</button>
+                <button onclick="restart()">set</button>
+                <input id="points_show" type="checkbox" value="1" onchange="resume(false)" checked />
+            </div>
+            <div class="off voronoi quad">
+                <label>Borders: </label>
+                <input id="borders" value="1" type="checkbox" onchange="resume(false)" checked />
+            </div>
+            <div class="off quad">
+                <label>Counters: </label>
+                <input id="quad_counters" value="1" type="checkbox" onchange="resume(false)" />
+            </div>
+            <div class="off quad">
+                <label>Capacity: </label>
+                <input id="quad_capacity" type="number" placeholder="4" onchange="restart(false, false)" />
+            </div>
+
+            <div class="off voronoi">
+                <label>Visual: </label>
+                <input id="voronoi_visuals" value="1" type="checkbox" onchange="resume()" checked />
+            </div>
+            <div class="off voronoi">
+                <label>Type: </label>
+                <div class="dropdown">
+                    <button id="voronoi_type" class="dropdown-button">euclidean</button>
+                    <div class="dropdown-content">
+                        <button onclick="selectVoronoiType('manhattan')">manhattan</button>
+                        <button onclick="selectVoronoiType('euclidean')">euclidean</button>
+                        <button onclick="selectVoronoiType('smooth')">smooth</button>
+                    </div>
+                </div>
+            </div>
+            <div class="off voronoi" id="voronoi_smooth">
+                <label>Degree: </label>
+                <input id="voronoi_smooth_degree" placeholder="3" min="3" max="4" onchange="selectVoronoiType('smooth')" type="number" />
+            </div>
+            <div class="off simplex slider-container">
+                <label>Scale: </label>
+                <input type="range" id="simplex_scale" min="1" max="200" step="1" value="30" class="slider" oninput="restart()" />
+                <span class="slider-value"> </span>
+            </div>
+            <div class="off simplex slider-container">
+                <label>Octaves: </label>
+                <input type="range" id="simplex_octaves" min="1" max="10" step="1" value="4" class="slider" oninput="restart()" />
+                <span class="slider-value"> </span>
+            </div>
+            <div class="off simplex slider-container">
+                <label>Persistance: </label>
+                <input type="range" id="simplex_persistance" min="0.01" max="2" step="0.05" value="0.4" class="slider" oninput="restart()" />
+                <span class="slider-value"> </span>
+            </div>
+            <div class="off simplex slider-container">
+                <label>Lacunarity: </label>
+                <input type="range" id="simplex_lacunarity" min="0.4" max="3" step="0.2" value="1.8" class="slider" oninput="restart()" />
+                <span class="slider-value"> </span>
+            </div>
+            <div class="off simplex">
+                <label>Factor: </label>
+                <input id="simplex_factor" type="number" placeholder="5" onchange="resume(true)" />
+            </div>
+            <div class="off simplex">
+                <label>Biomes: </label>
+                <input id="simplex_make_biomes" value="1" type="checkbox" onchange="resume(true)" checked />
+            </div>
+        </div>
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sliderContainers = document.querySelectorAll('.slider-container')
+
+            sliderContainers.forEach((container) => {
+                const slider = container.querySelector('.slider')
+                const valueDisplay = container.querySelector('.slider-value')
+                valueDisplay.style.width = '3rem'
+
+                function updateSlider() {
+                    valueDisplay.textContent = slider.value
+                }
+                updateSlider()
+                slider.addEventListener('input', updateSlider)
+            })
+        })
+    </script>
+</html>
