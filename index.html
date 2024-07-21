@@ -12,8 +12,8 @@
         <div id="panel">
             <div class="stay">
                 <button onclick="reseed();restart()">&#x21bb;</button>
+                <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad Tree</button>
                 <button class="stay" id="voronoi" onclick="reseed();switchMode('voronoi')">Voronoi Diagram</button>
-                <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad-Tree</button>
                 <button class="stay" id="simplex" onclick="reseed();switchMode('simplex')">OpenSimplex Noise</button>
             </div>
             <div class="off voronoi quad">
