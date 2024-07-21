@@ -1,4 +1,4 @@
-import { VoronoiDiagram } from './libs/voronoi_fortune.js'
+import { VoronoiDiagram } from './libs/algorithms/voronoi_fortune.js'
 
 export class VoronoiSpace extends VoronoiDiagram {
     addParticle = (p) => this.sites.push(p)

@@ -1,4 +1,4 @@
-import { QuadTree } from './libs/quadtree.js'
+import { QuadTree } from './libs/data_structures/quadtree.js'
 
 export class QuadTreeSpace extends QuadTree {
     addParticle = (particle) => this.insert(particle.x, particle.y, particle)

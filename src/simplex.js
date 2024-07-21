@@ -1,4 +1,4 @@
-import { OpenSimplexNoise } from './libs/opensimplexnoise.js'
+import { OpenSimplexNoise } from './libs/algorithms/opensimplexnoise.js'
 
 export class SimplexSpace extends OpenSimplexNoise {
     constructor(width, height, seed) {

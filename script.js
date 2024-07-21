@@ -1,9 +1,10 @@
+import { Rectangle } from './src/libs/data_types/rectangle.js'
+import { Particle } from './src/libs/data_types/particle.js'
+import { prng } from './src/libs/utils.js'
+
 import { VoronoiSpace } from './src/voronoi.js'
 import { SimplexSpace } from './src/simplex.js'
 import { QuadTreeSpace } from './src/quad.js'
-import { Particle } from './src/libs/particle.js'
-import { Rectangle } from './src/libs/rectangle.js'
-import { prng } from './src/utils.js'
 
 const CANVAS = document.getElementById('canvas')
 const CTX = CANVAS.getContext('2d')
