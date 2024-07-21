@@ -46,12 +46,18 @@ export class QuadTreeSpace extends QuadTree {
         if (params.showPoints) this.renderPoints()
     }
 
-    attach(canvas) {
-        canvas.addEventListener('mousedown', (e) => {
-            window.stop()
-            const r = canvas.getBoundingClientRect()
-            this.addParticle(window.makeRandomParticle(e.clientX - r.left, e.clientY - r.top))
-            window.resume(false)
-        })
+    attachedClick = (e) => {
+        window.stop()
+        const r = canvas.getBoundingClientRect()
+        this.addParticle(window.makeRandomParticle(e.clientX - r.left, e.clientY - r.top))
+        window.resume(false)
+    }
+
+    attach = (canvas) => {
+        canvas.addEventListener('mousedown', this.attachedClick)
+    }
+
+    detach = (canvas) => {
+        canvas.removeEventListener('mousedown', this.attachedClick)
     }
 }

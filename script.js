@@ -5,6 +5,7 @@ import { prng } from './src/libs/utils.js'
 import { VoronoiSpace } from './src/voronoi.js'
 import { SimplexSpace } from './src/simplex.js'
 import { QuadTreeSpace } from './src/quad.js'
+import { LineSpace } from './src/lines.js'
 
 const CANVAS = document.getElementById('canvas')
 const CTX = CANVAS.getContext('2d')
@@ -17,7 +18,7 @@ window.reseed = () => {
 }
 window.reseed()
 
-let TYPE = 'quad'
+let TYPE = 'lines'
 let VORONOI_TYPE = 'euclidean'
 let ANIMATION, CURRENT
 let WIDTH, HEIGHT
@@ -34,8 +35,6 @@ window.restart = (restartPoints = true, appendPoints = true) => {
     const children = document.getElementById('panel').children
     for (let i = 0; i < children.length; i++) if (!children[i].classList.contains('stay')) children[i].classList.add('off')
     window.switchMode(TYPE)
-    CURRENT.space.attach(CANVAS)
-    window.animation_loop(false)
 }
 
 window.animation_loop = (nextFrame = true) => {
@@ -49,31 +48,41 @@ window.animation_loop = (nextFrame = true) => {
 }
 window.stop = () => cancelAnimationFrame(ANIMATION)
 window.resume = (nextFrame = true) => window.stop() || window.animation_loop(nextFrame)
+window.refresh = () => window.resume(false)
 
 const init = (type) => {
     switch (type) {
-        case 'voronoi':
-            return initVoronoi()
         case 'simplex':
             return initSimplex()
         case 'quad':
             return initQuadTree()
+        case 'lines':
+            return initLines()
+        case 'voronoi':
+        default:
+            return initVoronoi()
     }
 }
 
 window.switchMode = (type) => {
     document.getElementById('voronoi_smooth').style.display = 'none'
+    if (CURRENT) CURRENT.space.detach(CANVAS)
     document.getElementById(TYPE).classList.remove('highlight')
     document.querySelectorAll('.' + TYPE).forEach((c) => c.classList.add('off'))
+
     TYPE = type
+    CURRENT = init(type)
+
+    CURRENT.space.attach(CANVAS)
     document.getElementById(TYPE).classList.add('highlight')
     document.querySelectorAll('.' + TYPE).forEach((c) => c.classList.remove('off'))
-    CURRENT = init(type)
     if (TYPE == 'voronoi') window.selectVoronoiType(VORONOI_TYPE)
     for (const p of POINTS) CURRENT.space.addParticle(p)
+    window.refresh()
 }
 
 window.selectVoronoiType = (type) => {
+    // TODO: fix typing?
     VORONOI_TYPE = type
     window.stop()
     document.getElementById('voronoi_smooth').style.display = 'none'
@@ -111,6 +120,7 @@ const getCheck = (name) => document.getElementById(name).checked
 //
 
 const initVoronoi = () => {
+    document.getElementById('animate').checked = true
     return {
         space: new VoronoiSpace(WIDTH, HEIGHT),
         getParams: () => {
@@ -127,6 +137,7 @@ const initVoronoi = () => {
 }
 
 const initSimplex = () => {
+    document.getElementById('animate').checked = false
     return {
         space: new SimplexSpace(WIDTH, HEIGHT, SEED),
         getParams: () => {
@@ -141,7 +152,9 @@ const initSimplex = () => {
         },
     }
 }
+
 const initQuadTree = () => {
+    document.getElementById('animate').checked = true
     return {
         space: new QuadTreeSpace(0, 0, WIDTH, HEIGHT, getValue('quad_capacity')),
         getParams: () => {
@@ -149,6 +162,18 @@ const initQuadTree = () => {
                 showPoints: getCheck('points_show'), //
                 showBorders: getCheck('borders'),
                 showCounters: getCheck('quad_counters'),
+            }
+        },
+    }
+}
+
+const initLines = () => {
+    document.getElementById('animate').checked = false
+    return {
+        space: new LineSpace(WIDTH, HEIGHT),
+        getParams: () => {
+            return {
+                type: document.getElementById('lines_type').innerText, //
             }
         },
     }

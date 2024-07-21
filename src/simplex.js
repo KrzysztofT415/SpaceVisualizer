@@ -160,6 +160,7 @@ export class SimplexSpace extends OpenSimplexNoise {
     }
 
     attach = () => {}
+    detach = () => {}
 }
 
 // import { prngd } from './utils.js'

@@ -70,13 +70,18 @@ export class VoronoiSpace extends VoronoiDiagram {
         if (params.showPoints) this.renderPoints() || this.renderCrossroads()
     }
 
-    attach(canvas) {
-        canvas.addEventListener('mousedown', (e) => {
-            window.stop()
-            const r = canvas.getBoundingClientRect()
-            const p = window.makeRandomParticle(e.clientX - r.left, e.clientY - r.top)
-            this.sites.push(p)
-            window.resume(false)
-        })
+    attachedClick = (e) => {
+        window.stop()
+        const r = canvas.getBoundingClientRect()
+        this.addParticle(window.makeRandomParticle(e.clientX - r.left, e.clientY - r.top))
+        window.resume(false)
+    }
+
+    attach = (canvas) => {
+        canvas.addEventListener('mousedown', this.attachedClick)
+    }
+
+    detach = (canvas) => {
+        canvas.removeEventListener('mousedown', this.attachedClick)
     }
 }

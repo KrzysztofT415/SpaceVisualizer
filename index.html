@@ -12,11 +12,12 @@
         <div id="panel">
             <div class="stay">
                 <button onclick="reseed();restart()">&#x21bb;</button>
+                <button class="stay" id="lines" onclick="reseed();switchMode('lines')">Lines</button>
                 <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad Tree</button>
                 <button class="stay" id="voronoi" onclick="reseed();switchMode('voronoi')">Voronoi Diagram</button>
                 <button class="stay" id="simplex" onclick="reseed();switchMode('simplex')">OpenSimplex Noise</button>
             </div>
-            <div class="off voronoi quad">
+            <div class="off voronoi quad lines">
                 <label>Animate: </label>
                 <input id="animate" value="1" type="checkbox" onchange="resume()" checked />
             </div>
@@ -25,15 +26,15 @@
                 <input id="points_num" type="number" placeholder="100" />
                 <button onclick="restart(false)">&#43;</button>
                 <button onclick="restart()">set</button>
-                <input id="points_show" type="checkbox" value="1" onchange="resume(false)" checked />
+                <input id="points_show" type="checkbox" value="1" onchange="refresh()" checked />
             </div>
             <div class="off voronoi quad">
                 <label>Borders: </label>
-                <input id="borders" value="1" type="checkbox" onchange="resume(false)" checked />
+                <input id="borders" value="1" type="checkbox" onchange="refresh()" checked />
             </div>
             <div class="off quad">
                 <label>Counters: </label>
-                <input id="quad_counters" value="1" type="checkbox" onchange="resume(false)" />
+                <input id="quad_counters" value="1" type="checkbox" onchange="refresh()" />
             </div>
             <div class="off quad">
                 <label>Capacity: </label>
@@ -42,16 +43,16 @@
 
             <div class="off voronoi">
                 <label>Visual: </label>
-                <input id="voronoi_visuals" value="1" type="checkbox" onchange="resume()" checked />
+                <input id="voronoi_visuals" value="1" type="checkbox" onchange="refresh()" checked />
             </div>
             <div class="off voronoi">
                 <label>Type: </label>
                 <div class="dropdown">
                     <button id="voronoi_type" class="dropdown-button">euclidean</button>
                     <div class="dropdown-content">
-                        <button onclick="selectVoronoiType('manhattan')">manhattan</button>
-                        <button onclick="selectVoronoiType('euclidean')">euclidean</button>
-                        <button onclick="selectVoronoiType('smooth')">smooth</button>
+                        <button>manhattan</button>
+                        <button>euclidean</button>
+                        <button>smooth</button>
                     </div>
                 </div>
             </div>
@@ -87,6 +88,16 @@
                 <label>Biomes: </label>
                 <input id="simplex_make_biomes" value="1" type="checkbox" onchange="resume(true)" />
             </div>
+            <div class="off lines">
+                <label>Type: </label>
+                <div class="dropdown">
+                    <button id="lines_type" class="dropdown-button">linear</button>
+                    <div class="dropdown-content">
+                        <button>linear</button>
+                        <button>bezier</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
@@ -101,11 +112,26 @@
                 const valueDisplay = container.querySelector('.slider-value')
                 valueDisplay.style.width = '3rem'
 
-                function updateSlider() {
+                const updateSlider = () => {
                     valueDisplay.textContent = slider.value
                 }
                 updateSlider()
                 slider.addEventListener('input', updateSlider)
+            })
+
+            const dropdowns = document.querySelectorAll('.dropdown')
+
+            dropdowns.forEach((dropdown) => {
+                const button = dropdown.querySelector('.dropdown-button')
+                const content = dropdown.querySelector('.dropdown-content').children
+
+                for (let i = 0; i < content.length; i++) {
+                    const updateSelection = () => {
+                        button.innerText = content[i].innerHTML
+                        window.refresh()
+                    }
+                    content[i].addEventListener('click', updateSelection)
+                }
             })
         })
     </script>
