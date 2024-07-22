@@ -5,44 +5,95 @@ export class SimplexSpace extends OpenSimplexNoise {
         super(seed)
         this.width = width
         this.height = height
-        this.data = []
-        this.callback = (n) => [n * 255, n * 255, n * 255]
+        this.noiseData = []
     }
 
-    makeMap() {
-        const map = Array.from(Array(this.width), () => new Array(this.height))
-        let [maxNoiseHeight, minNoiseHeight] = [0, 0]
-        for (let x = 0; x < this.width; ++x) {
-            for (let y = 0; y < this.height; ++y) {
-                let amplitude = 1
-                let frequency = 1
-                let noiseHeight = 0
+    addParticle = () => {}
 
-                for (let i = 0; i < this.params.octaves; ++i) {
-                    let sampleX = ((x - this.width / 2) / this.params.scale) * frequency
-                    let sampleY = ((y - this.height / 2) / this.params.scale) * frequency
-
-                    noiseHeight += this.eval2d(sampleX, sampleY) * amplitude
-                    amplitude *= this.params.persistance
-                    frequency *= this.params.lacunarity
-                }
-
-                if (noiseHeight > maxNoiseHeight) maxNoiseHeight = noiseHeight
-                else if (noiseHeight < minNoiseHeight) minNoiseHeight = noiseHeight
-
-                map[x][y] = noiseHeight
-            }
-        }
-        for (let y = 0; y < this.height; ++y) {
-            for (let x = 0; x < this.width; ++x) {
-                map[x][y] = (map[x][y] - minNoiseHeight) / (maxNoiseHeight - minNoiseHeight)
-            }
-        }
-        return map
+    update = () => {
+        this.noiseData = this.makeImageData()
     }
 
-    makeImageData() {
-        const [width, height] = [~~(this.width / this.params.factor), ~~(this.height / this.params.factor)]
+    noiseCallback = (n) => [n * 255, n * 255, n * 255]
+
+    worldMapCallback = () => {
+        const w = {
+            deepWater: [0, 51, 102],
+            shallowWater: [51, 153, 255],
+
+            river: [51, 153, 255],
+            lake: [51, 102, 204],
+
+            grasslands: [102, 204, 102],
+            fertilePlains: [153, 255, 153],
+
+            deciduousForest: [34, 139, 34],
+            coniferousForest: [0, 100, 0],
+
+            lowMountains: [169, 169, 169],
+            highMountains: [105, 105, 105],
+            mountainPeaks: [255, 255, 255],
+
+            sandDunes: [237, 201, 175],
+            rockyDeserts: [194, 178, 128],
+
+            tundra: [211, 211, 211],
+            iceSnow: [255, 255, 255],
+
+            swamps: [85, 107, 47],
+            marshes: [143, 188, 143],
+
+            smallTowns: [128, 128, 128],
+            largeCities: [64, 64, 64],
+
+            volcanicRock: [75, 0, 130],
+            lava: [255, 69, 0],
+
+            sandyBeaches: [255, 215, 0],
+            rockyShores: [184, 134, 11],
+        }
+
+        return (n) => {
+            if (n < 0.2) return w.deepWater
+            if (n < 0.35) return w.shallowWater
+            if (n < 0.37) return w.sandyBeaches
+            if (n < 0.4) return w.rockyShores
+            if (n < 0.5) return w.grasslands
+            if (n < 0.6) return w.fertilePlains
+            if (n < 0.63) return w.grasslands
+            if (n < 0.8) return w.deciduousForest
+            if (n < 0.87) return w.coniferousForest
+            if (n < 0.9) return w.lowMountains
+            if (n < 0.98) return w.highMountains
+            return w.mountainPeaks
+        }
+    }
+
+    render = (ctx, params) => {
+        if (params.makeBiomes) this.callback = this.worldMapCallback()
+        else this.callback = this.noiseCallback
+
+        if (this.noiseData.length == 0) this.noiseData = this.makeImageData(params)
+
+        this.imageData = ctx.createImageData(this.noiseData.width, this.noiseData.height)
+        this.imageData.data.set(this.noiseData.array)
+
+        if (params.factor > 1) this.renderNoiseScaled(ctx)
+        else this.renderNoise(ctx)
+    }
+
+    renderNoiseScaled = async (ctx) => {
+        const bitmap = await createImageBitmap(this.imageData)
+        ctx.imageSmoothingEnabled = false
+        ctx.drawImage(bitmap, 0, 0, this.width, this.height)
+    }
+
+    renderNoise = (ctx) => {
+        ctx.putImageData(this.imageData, (this.width - this.imageData.width) / 2, (this.height - this.imageData.height) / 2)
+    }
+
+    makeImageData = (params) => {
+        const [width, height] = [~~(this.width / params.factor), ~~(this.height / params.factor)]
         const map = new Array(width * height)
         let [maxNoiseHeight, minNoiseHeight] = [0, 0]
         for (let x = 0; x < width; ++x) {
@@ -51,13 +102,13 @@ export class SimplexSpace extends OpenSimplexNoise {
                 let frequency = 1
                 let noiseHeight = 0
 
-                for (let i = 0; i < this.params.octaves; ++i) {
-                    let sampleX = ((x - width / 2) / this.params.scale) * frequency
-                    let sampleY = ((y - height / 2) / this.params.scale) * frequency
+                for (let i = 0; i < params.octaves; ++i) {
+                    let sampleX = ((x - width / 2) / params.scale) * frequency * params.factor
+                    let sampleY = ((y - height / 2) / params.scale) * frequency * params.factor
 
                     noiseHeight += this.eval2d(sampleX, sampleY) * amplitude
-                    amplitude *= this.params.persistance
-                    frequency *= this.params.lacunarity
+                    amplitude *= params.persistance
+                    frequency *= params.lacunarity
                 }
 
                 if (noiseHeight > maxNoiseHeight) maxNoiseHeight = noiseHeight
@@ -77,86 +128,6 @@ export class SimplexSpace extends OpenSimplexNoise {
             data[i * 4 + 3] = 255
         }
         return { array: data, width, height }
-    }
-
-    addParticle = () => {}
-
-    update = () => {
-        this.data = this.makeImageData()
-    }
-
-    worldMapCallback = () => {
-        let deepWater = [0, 51, 102]
-        let shallowWater = [51, 153, 255]
-
-        let river = [51, 153, 255]
-        let lake = [51, 102, 204]
-
-        let grasslands = [102, 204, 102]
-        let fertilePlains = [153, 255, 153]
-
-        let deciduousForest = [34, 139, 34]
-        let coniferousForest = [0, 100, 0]
-
-        let lowMountains = [169, 169, 169]
-        let highMountains = [105, 105, 105]
-        let mountainPeaks = [255, 255, 255]
-
-        let sandDunes = [237, 201, 175]
-        let rockyDeserts = [194, 178, 128]
-
-        let tundra = [211, 211, 211]
-        let iceSnow = [255, 255, 255]
-
-        let swamps = [85, 107, 47]
-        let marshes = [143, 188, 143]
-
-        let smallTowns = [128, 128, 128]
-        let largeCities = [64, 64, 64]
-
-        let volcanicRock = [75, 0, 130]
-        let lava = [255, 69, 0]
-
-        let sandyBeaches = [255, 215, 0]
-        let rockyShores = [184, 134, 11]
-
-        return (n) => {
-            if (n < 0.2) return deepWater
-            if (n < 0.35) return shallowWater
-            if (n < 0.37) return sandyBeaches
-            if (n < 0.4) return rockyShores
-            if (n < 0.5) return grasslands
-            if (n < 0.6) return fertilePlains
-            if (n < 0.63) return grasslands
-            if (n < 0.8) return deciduousForest
-            if (n < 0.87) return coniferousForest
-            if (n < 0.9) return lowMountains
-            if (n < 0.98) return highMountains
-            return mountainPeaks
-        }
-    }
-
-    renderNoise = (ctx) => {
-        ctx.putImageData(this.imageData, (this.width - this.imageData.width) / 2, (this.height - this.imageData.height) / 2)
-    }
-
-    renderNoiseScaled = async (ctx) => {
-        const bitmap = await createImageBitmap(this.imageData)
-        ctx.imageSmoothingEnabled = false
-        ctx.drawImage(bitmap, 0, 0, this.width, this.height)
-    }
-
-    render = (ctx, params) => {
-        this.params = params
-        if (this.params.makeBiomes) this.callback = this.worldMapCallback()
-        else this.callback = (n) => [n * 255, n * 255, n * 255]
-
-        if (this.data.length == 0) this.data = this.makeImageData()
-
-        this.imageData = ctx.createImageData(this.data.width, this.data.height)
-        this.imageData.data.set(this.data.array)
-        if (this.params.factor > 1) this.renderNoiseScaled(ctx)
-        else this.renderNoise(ctx)
     }
 
     attach = () => {}

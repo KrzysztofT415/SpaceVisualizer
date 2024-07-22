@@ -22,20 +22,20 @@ export class LineSpace {
     }
 
     renderLinear = (ctx) => {
-        this.renderLine(ctx, this.start, this.end, 'white')
+        this.renderLine(ctx, this.start, this.end, window.colors().WL)
     }
 
     renderBezier = (ctx) => {
-        this.renderLine(ctx, this.start, this.anchor1, 'rgba(0, 255, 0, 0.5)')
-        this.renderLine(ctx, this.end, this.anchor2, 'rgba(255, 0, 0, 0.5)')
+        this.renderLine(ctx, this.start, this.anchor1, window.colors().GREEN)
+        this.renderLine(ctx, this.end, this.anchor2, window.colors().RED)
         ctx.beginPath()
         ctx.moveTo(this.start.x, this.start.y)
         ctx.bezierCurveTo(this.anchor1.x, this.anchor1.y, this.anchor2.x, this.anchor2.y, this.end.x, this.end.y)
-        ctx.strokeStyle = 'white'
+        ctx.strokeStyle = window.colors().WL
         ctx.lineWidth = 3
         ctx.stroke()
-        window.drawCircle(this.anchor1.x, this.anchor1.y, this.radius, 'grey')
-        window.drawCircle(this.anchor2.x, this.anchor2.y, this.radius, 'grey')
+        window.drawCircle(this.anchor1.x, this.anchor1.y, this.radius, window.colors().DL)
+        window.drawCircle(this.anchor2.x, this.anchor2.y, this.radius, window.colors().DL)
     }
 
     update = () => {
@@ -43,19 +43,17 @@ export class LineSpace {
     }
 
     render = (ctx, params) => {
-        this.params = params
-
-        if (this.params.type == 'linear') this.renderLinear(ctx)
+        if (params.type == 'linear') this.renderLinear(ctx)
         else this.renderBezier(ctx)
 
-        window.drawCircle(this.start.x, this.start.y, this.radius, 'red')
-        window.drawCircle(this.end.x, this.end.y, this.radius, 'red')
+        window.drawCircle(this.start.x, this.start.y, this.radius, window.colors().GREEN)
+        window.drawCircle(this.end.x, this.end.y, this.radius, window.colors().RED)
     }
 
     attachedClick = (e) => {
         const isInsideCircle = (p, x, y) => {
-            const dx = p.x - x
-            const dy = p.y - y
+            const dx = p.x - this.radius - x
+            const dy = p.y - this.radius - y
             return dx * dx + dy * dy <= this.radius * this.radius
         }
 

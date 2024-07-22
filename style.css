@@ -12,7 +12,7 @@
     --primaryM: #ff9800;
     --primaryD: #c66900;
 
-    --white: #eceff1;
+    --whiteL: #eceff1;
     --whiteD: #babdbe;
     --darkL: #61656d;
     --darkM: #373b42;
@@ -42,7 +42,7 @@ html {
     /* overflow: hidden; */
 }
 
-#panel {
+#panel_main {
     background-color: var(--whiteD);
     display: flex;
     flex-wrap: wrap;
@@ -62,13 +62,25 @@ html {
     height: 100%;
 }
 
-#panel * {
+#panel_main * {
     padding: 5px 10px;
     margin: 5px 4px;
     width: fit-content;
     height: 2.5rem;
     text-align: center;
     align-content: center;
+}
+
+#panel_main .wrapper {
+    flex-basis: 100%;
+    /* flex-grow: 1; */
+    max-height: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.panel-content {
+    display: contents;
 }
 
 .off {
