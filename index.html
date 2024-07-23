@@ -11,7 +11,7 @@
     <body id="body">
         <div id="panel_main" class="button-panel">
             <div class="stay">
-                <button onclick="reseed();restart()">&#x21bb;</button>
+                <button onclick="reseed();restart(true, true)">&#x21bb;</button>
                 <button class="stay" id="simplex" onclick="reseed();switchMode('simplex')">OpenSimplex Noise</button>
                 <button class="stay" id="lines" onclick="reseed();switchMode('lines')">Lines</button>
                 <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad Tree</button>
@@ -21,17 +21,33 @@
 
             <div class="combined voronoi quad panel-content">
                 <div>
+                    <label>FPS: </label>
+                    <span id="fps"> </span>
+                </div>
+                <div>
                     <label>Animate: </label>
-                    <input id="animate" value="1" type="checkbox" onchange="resume()" checked />
+                    <input id="animate" value="1" type="checkbox" onchange="refresh()" checked />
                 </div>
                 <div>
                     <label>Points: </label>
                     <input id="points_num" type="number" placeholder="100" />
-                    <button onclick="restart(false)">&#43;</button>
+                    <button onclick="restart(true)">&#43;</button>
                     <button onclick="restart()">set</button>
                     <input id="points_show" type="checkbox" value="1" onchange="refresh()" checked />
                 </div>
             </div>
+
+            <div class="lines">
+                <label>Type: </label>
+                <div class="dropdown">
+                    <button id="lines_type" class="dropdown-button">linear</button>
+                    <div class="dropdown-content" onclick="refresh()">
+                        <button>linear</button>
+                        <button>bezier</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="stay wrapper"></div>
 
             <div class="combined">
@@ -74,7 +90,7 @@
                     <label>Distance: </label>
                     <div class="dropdown">
                         <button id="voronoi_distance" class="dropdown-button">manhattan</button>
-                        <div class="dropdown-content" onclick="resume()">
+                        <div class="dropdown-content" onclick="refresh()">
                             <button>manhattan</button>
                             <button>euclidean</button>
                             <button>smooth</button>
@@ -108,7 +124,7 @@
                 </div>
                 <div>
                     <label>Capacity: </label>
-                    <input id="quad_capacity" type="number" placeholder="4" onchange="restart(false, false)" />
+                    <input id="quad_capacity" type="number" placeholder="4" onchange="restart(true, true)" />
                 </div>
             </div>
             <div class="combined wrapper"></div>
@@ -134,23 +150,14 @@
                     <input type="range" id="simplex_lacunarity" min="0.4" max="3" step="0.2" value="2.2" class="slider" oninput="restart()" />
                     <span class="slider-value"> </span>
                 </div>
-                <div>
+                <div class="slider-container">
                     <label>Factor: </label>
-                    <input id="simplex_factor" type="number" placeholder="5" onchange="restart()" />
+                    <input type="range" id="simplex_factor" min="1" max="30" step="1" value="5" class="slider" oninput="restart()" />
+                    <span class="slider-value"> </span>
                 </div>
                 <div>
                     <label>Biomes: </label>
                     <input id="simplex_make_biomes" value="1" type="checkbox" onchange="restart()" />
-                </div>
-            </div>
-            <div class="lines">
-                <label>Type: </label>
-                <div class="dropdown">
-                    <button id="lines_type" class="dropdown-button">linear</button>
-                    <div class="dropdown-content" onclick="refresh()">
-                        <button>linear</button>
-                        <button>bezier</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -189,10 +196,15 @@
             })
         })
 
+        window.updateFPS = (fps) => {
+            document.getElementById('fps').innerText = fps
+        }
+
         window.hidePanel = () => {
             const children = document.getElementById('panel_main').children
             for (let i = 0; i < children.length; i++) if (!children[i].classList.contains('stay')) children[i].classList.add('off')
         }
         window.hidePanel()
+        document.oncontextmenu = document.body.oncontextmenu = () => false
     </script>
 </html>

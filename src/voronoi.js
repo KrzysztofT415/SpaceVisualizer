@@ -104,10 +104,9 @@ export class VoronoiSpace {
     renderCrosspoints = () => this.diagram.voronoi.forEach((cell) => cell.borders.forEach((point) => window.drawCircle(point[0], point[1], 2, window.colors().PD)))
 
     attachedClick = (e) => {
-        window.stop()
         const r = canvas.getBoundingClientRect()
         window.addParticle(e.clientX - r.left, e.clientY - r.top)
-        window.resume(false)
+        window.refresh()
     }
 
     attach = (canvas) => {

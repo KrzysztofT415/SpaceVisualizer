@@ -50,10 +50,9 @@ export class QuadTreeSpace extends QuadTree {
     }
 
     attachedClick = (e) => {
-        window.stop()
         const r = canvas.getBoundingClientRect()
         window.addParticle(e.clientX - r.left, e.clientY - r.top)
-        window.resume(false)
+        window.refresh()
     }
 
     attach = (canvas) => {

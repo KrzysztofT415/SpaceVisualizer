@@ -26,6 +26,7 @@ window.colors = () => ({
     BROWN: getComputedStyle(document.documentElement).getPropertyValue('--brown'),
 })
 
+const PANEL = document.getElementById('panel_main')
 const CANVAS = document.getElementById('canvas')
 const CTX = CANVAS.getContext('2d')
 
@@ -37,39 +38,45 @@ window.reseed = () => {
 }
 window.reseed()
 
-let TYPE = 'simplex'
+let TYPE = 'lines'
 let VORONOI_TYPE = 'manhattan'
-let ANIMATION, CURRENT
+let ANIMATION
+window.CURRENT = null
 let WIDTH, HEIGHT
 let POINTS = []
 
-window.restart = (restartPoints = true, appendPoints = true) => {
-    window.stop()
-    ;[WIDTH, HEIGHT] = [CANVAS.parentElement.clientWidth, CANVAS.parentElement.clientHeight]
+window.recalculateBoundary = () => {
+    ;[WIDTH, HEIGHT] = [CANVAS.parentElement.clientWidth, window.innerHeight - PANEL.clientHeight]
     CANVAS.width = WIDTH
     CANVAS.height = HEIGHT
-    window.boundary = new Rectangle(0, 0, WIDTH, HEIGHT)
-    if (restartPoints) POINTS = []
-    if (appendPoints) for (let i = 0; i < getValue('points_num'); i++) POINTS.push(window.makeRandomParticle())
-    window.hidePanel()
-    window.switchMode(TYPE)
+    const rectangle = new Rectangle(0, 0, WIDTH, HEIGHT)
+    window.boundary = rectangle
+    POINTS.forEach((p) => (p.boundary = rectangle))
 }
 
-window.animation_loop = (nextFrame = true) => {
+let [lastCountTime, frameCount] = [performance.now(), 0]
+window.animation_loop = (currentTime) => {
     CTX.reset()
-    CURRENT.space.render(CTX, CURRENT.getParams())
-    if (nextFrame) {
-        for (const p of POINTS) p.update()
-        CURRENT.space.update()
-    }
+    window.CURRENT.space.render(CTX, window.CURRENT.getParams())
+
     if (getCheck('animate')) {
-        cancelAnimationFrame(ANIMATION)
+        for (const p of POINTS) p.update()
+        window.CURRENT.space.update()
+
+        frameCount++
+        if (window.currentTime - lastCountTime >= 1000) {
+            window.updateFPS(frameCount)
+            frameCount = 0
+            lastCountTime = currentTime
+        }
         ANIMATION = requestAnimationFrame(window.animation_loop)
-    }
+    } else window.updateFPS('-')
 }
-window.stop = () => cancelAnimationFrame(ANIMATION)
-window.resume = (nextFrame = true) => window.stop() || window.animation_loop(nextFrame)
-window.refresh = () => window.resume(false)
+
+window.refresh = () => {
+    cancelAnimationFrame(ANIMATION)
+    ANIMATION = requestAnimationFrame(window.animation_loop)
+}
 
 const init = (type) => {
     switch (type) {
@@ -87,32 +94,45 @@ const init = (type) => {
     }
 }
 
-window.switchMode = (type) => {
+window.restart = (restartPoints = false, appendPoints = false) => window.switchMode(TYPE, restartPoints, appendPoints)
+window.switchMode = (type, restartPoints = false, appendPoints = false) => {
+    if (TYPE == 'lines' && (type == 'voronoi' || type == 'quad' || type == 'combined')) restartPoints = appendPoints = true
+    if (type == 'lines' && (TYPE == 'voronoi' || TYPE == 'quad' || TYPE == 'combined')) restartPoints = appendPoints = true
+    window.switchPanel(type)
+
+    TYPE = type
+    window.CURRENT = init(type)
+
+    window.CURRENT.space.attach(CANVAS)
+
+    if (restartPoints) POINTS = []
+    if (appendPoints) for (let i = 0; i < getValue('points_num'); i++) POINTS.push(window.makeRandomParticle())
+    for (const p of POINTS) window.CURRENT.space.addParticle(p)
+    window.refresh()
+}
+
+window.switchPanel = (type) => {
+    window.hidePanel()
+
     document.getElementById('voronoi_smooth').style.display = 'none'
-    if (CURRENT) CURRENT.space.detach(CANVAS)
+    if (window.CURRENT) window.CURRENT.space.detach(CANVAS)
     document.getElementById(TYPE).classList.remove('highlight')
     document.querySelectorAll('.' + TYPE).forEach((c) => c.classList.add('off'))
 
-    TYPE = type
-    CURRENT = init(type)
+    document.getElementById(type).classList.add('highlight')
+    document.querySelectorAll('.' + type).forEach((c) => c.classList.remove('off'))
+    if (type == 'voronoi') window.selectVoronoiType(VORONOI_TYPE)
 
-    CURRENT.space.attach(CANVAS)
-    document.getElementById(TYPE).classList.add('highlight')
-    document.querySelectorAll('.' + TYPE).forEach((c) => c.classList.remove('off'))
-    if (TYPE == 'voronoi') window.selectVoronoiType(VORONOI_TYPE)
-
-    for (const p of POINTS) CURRENT.space.addParticle(p)
-    window.refresh()
+    window.recalculateBoundary()
 }
 
 window.selectVoronoiType = (type) => {
     // TODO: fix typing?
     VORONOI_TYPE = type
-    window.stop()
     document.getElementById('voronoi_smooth').style.display = 'none'
     document.getElementById('voronoi_distance').innerText = type
     if (type == 'smooth') document.getElementById('voronoi_smooth').style.display = 'flex'
-    window.resume()
+    window.refresh()
 }
 
 window.drawCircle = (x, y, r, color) => {
@@ -133,12 +153,13 @@ window.makeRandomParticle = (
 
 window.addParticle = (...args) => {
     const p = window.makeRandomParticle(...args)
-    CURRENT.space.addParticle(p)
+    window.CURRENT.space.addParticle(p)
     POINTS.push(p)
+    return p
 }
 
-window.onresize = window.restart
-window.onload = window.restart
+window.onresize = () => window.restart(true, true)
+window.onload = () => window.restart(true, true)
 //
 
 const getValue = (name) => {
@@ -167,6 +188,7 @@ const initSimplex = () => {
 }
 
 const initVoronoi = () => {
+    document.getElementById('points_num').value = 100
     const is_normal = document.getElementById('voronoi_type').innerText == 'normal'
     document.getElementById('animate').checked = !is_normal
     document.getElementById('animate').disabled = is_normal
@@ -188,6 +210,7 @@ const initVoronoi = () => {
 }
 
 const initQuadTree = () => {
+    document.getElementById('points_num').value = 100
     document.getElementById('animate').checked = true
     return {
         space: new QuadTreeSpace(0, 0, WIDTH, HEIGHT, getValue('quad_capacity')),
@@ -221,6 +244,7 @@ const initCombined = () => {
 }
 
 const initLines = () => {
+    document.getElementById('points_num').value = 0
     document.getElementById('animate').checked = false
     return {
         space: new LineSpace(WIDTH, HEIGHT),
