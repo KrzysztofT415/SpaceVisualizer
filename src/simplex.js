@@ -8,7 +8,7 @@ export class SimplexSpace extends OpenSimplexNoise {
         this.noiseData = []
     }
 
-    addParticle = () => {}
+    addParticles = () => {}
 
     update = () => {
         this.noiseData = this.makeImageData()

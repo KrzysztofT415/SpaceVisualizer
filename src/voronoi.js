@@ -18,7 +18,7 @@ export class VoronoiSpace {
         }
     }
 
-    addParticle = (p) => this.diagram.sites.push(p)
+    addParticles = (...particles) => this.diagram.sites.push(...particles)
 
     runVoronoi = () => {
         if (this.colors.length != this.diagram.sites.length) {
@@ -34,17 +34,19 @@ export class VoronoiSpace {
         if (this.diagram.voronoi.length == 0) this.runVoronoi()
 
         if (this.diagram.rendersImage) {
-            this.diagram.distance_type = params.distance
-            this.diagram.degree = params.degree
+            if (this.diagram.distance_type != params.distance || this.diagram.degree != params.degree) {
+                this.diagram.distance_type = params.distance
+                this.diagram.degree = params.degree
+                this.runVoronoi()
+            }
             this.renderWholeImage(ctx)
-            if (params.showPoints) this.renderPoints()
-            return
+        } else {
+            if (params.visuals) this.renderCells(ctx, params)
+            if (params.showBorders) this.renderBorders(ctx)
+            if (params.showCrosspoints) this.renderCrosspoints()
         }
 
-        if (params.visuals) this.renderCells(ctx, params.radius)
-        if (params.showBorders) this.renderBorders(ctx)
         if (params.showPoints) this.renderPoints()
-        if (params.showCrosspoints) this.renderCrosspoints()
 
         // let tmp = this.diagram.voronoi.sort((a, b) => (a.center.y < b.center.y ? -1 : a.center.y > b.center.y ? 1 : a.center.x < b.center.x ? -1 : a.center.x > b.center.x ? 1 : 0))
         // console.log(tmp[0])
@@ -58,13 +60,23 @@ export class VoronoiSpace {
         ctx.putImageData(imageData, 0, 0)
     }
 
-    renderCells = (ctx, radius) => {
+    renderCells = (ctx, params) => {
         ctx.strokeStyle = 'black'
-        this.diagram.voronoi.forEach((cell) => {
-            const gradient = ctx.createRadialGradient(cell.center.x, cell.center.y, 0, cell.center.x, cell.center.y, radius)
-            gradient.addColorStop(0, window.colors().WD)
-            gradient.addColorStop(1, window.colors().DD)
-            ctx.fillStyle = gradient
+        this.diagram.voronoi.forEach((cell, i) => {
+            if (params.colored) {
+                if (params.adaptive) {
+                    const [r, g, b] = xyToRgb(cell.center.x, cell.center.y, this.width, this.height)
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
+                } else {
+                    const [r, g, b] = this.colors[i]
+                    ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
+                }
+            } else {
+                const gradient = ctx.createRadialGradient(cell.center.x, cell.center.y, 0, cell.center.x, cell.center.y, params.radius)
+                gradient.addColorStop(0, window.colors().WD)
+                gradient.addColorStop(1, window.colors().DD)
+                ctx.fillStyle = gradient
+            }
             ctx.beginPath()
             cell.borders.forEach((point, index) => {
                 if (index === 0) ctx.moveTo(point[0], point[1])
@@ -99,13 +111,13 @@ export class VoronoiSpace {
         })
     }
 
-    renderPoints = () => this.diagram.sites.forEach((p) => window.drawCircle(p.x, p.y, 2, window.colors().PL))
+    renderPoints = () => this.diagram.sites.forEach((p) => p.draw())
 
     renderCrosspoints = () => this.diagram.voronoi.forEach((cell) => cell.borders.forEach((point) => window.drawCircle(point[0], point[1], 2, window.colors().PD)))
 
     attachedClick = (e) => {
         const r = canvas.getBoundingClientRect()
-        window.addParticle(e.clientX - r.left, e.clientY - r.top)
+        window.addParticle({ x: e.clientX - r.left, y: e.clientY - r.top })
         window.refresh()
     }
 

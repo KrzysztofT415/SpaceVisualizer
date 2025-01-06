@@ -11,15 +11,16 @@
     <body id="body">
         <div id="panel_main" class="button-panel">
             <div class="stay">
-                <button onclick="reseed();restart(true, true)">&#x21bb;</button>
-                <button class="stay" id="simplex" onclick="reseed();switchMode('simplex')">OpenSimplex Noise</button>
-                <button class="stay" id="lines" onclick="reseed();switchMode('lines')">Lines</button>
-                <button class="stay" id="quad" onclick="reseed();switchMode('quad')">Quad Tree</button>
-                <button class="stay" id="voronoi" onclick="reseed();switchMode('voronoi')">Voronoi Diagram</button>
-                <button class="stay" id="combined" onclick="reseed();switchMode('combined')">Voronoi + Quad</button>
+                <button onclick="reseed();restart(true)">&#x21bb;</button>
+                <button class="stay" id="simplex" onclick="switchMode('simplex')">OpenSimplex Noise</button>
+                <button class="stay" id="lines" onclick="switchMode('lines')">Lines</button>
+                <button class="stay" id="quad" onclick="switchMode('quad')">Quad Tree</button>
+                <button class="stay" id="voronoi" onclick="switchMode('voronoi')">Voronoi Diagram</button>
+                <button class="stay" id="combined" onclick="switchMode('combined')">Voronoi + Quad</button>
+                <button class="stay" id="simulation" onclick="switchMode('simulation')">Simulation</button>
             </div>
 
-            <div class="combined voronoi quad panel-content">
+            <div class="voronoi quad combined simulation panel-content">
                 <div>
                     <label>FPS: </label>
                     <span id="fps"> </span>
@@ -30,20 +31,23 @@
                 </div>
                 <div>
                     <label>Points: </label>
+                    <span id="points_current">0 </span>
                     <input id="points_num" type="number" placeholder="100" />
-                    <button onclick="restart(true)">&#43;</button>
+                    <button onclick="appendPoints()">&#43;</button>
                     <button onclick="restart()">set</button>
                     <input id="points_show" type="checkbox" value="1" onchange="refresh()" checked />
                 </div>
             </div>
 
-            <div class="lines">
-                <label>Type: </label>
-                <div class="dropdown">
-                    <button id="lines_type" class="dropdown-button">linear</button>
-                    <div class="dropdown-content" onclick="refresh()">
-                        <button>linear</button>
-                        <button>bezier</button>
+            <div class="lines dropdown">
+                <div>
+                    <label>Type: </label>
+                    <div class="dropdown-head">
+                        <button id="lines_type" class="dropdown-button">linear</button>
+                        <div class="dropdown-content" onclick="refresh()">
+                            <button>linear</button>
+                            <button>bezier</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -54,10 +58,10 @@
                 <label>VORONOI:</label>
             </div>
 
-            <div class="combined voronoi panel-content">
+            <div class="combined voronoi panel-content dropdown">
                 <div>
                     <label>Type: </label>
-                    <div class="dropdown">
+                    <div class="dropdown-head">
                         <button id="voronoi_type" class="dropdown-button">fortune</button>
                         <div class="dropdown-content" onclick="restart()">
                             <button>fortune</button>
@@ -65,51 +69,59 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <label>Crosspoints: </label>
-                    <input id="voronoi_crosspoints" value="1" type="checkbox" onchange="refresh()" />
-                </div>
-                <div>
-                    <label>Borders: </label>
-                    <input id="voronoi_borders" value="1" type="checkbox" onchange="refresh()" checked />
-                </div>
-                <div>
-                    <label>Area: </label>
-                    <input id="voronoi_visuals" value="1" type="checkbox" onchange="refresh()" />
-                </div>
-                <div class="slider-container">
-                    <label>Radius: </label>
-                    <input type="range" id="voronoi_radius" min="10" max="300" step="10" value="140" class="slider" oninput="refresh()" />
-                    <span class="slider-value"> </span>
-                </div>
-                <div>
-                    <label>Adaptive: </label>
-                    <input id="voronoi_adaptive" value="1" type="checkbox" onchange="refresh()" checked />
-                </div>
-                <div>
-                    <label>Distance: </label>
-                    <div class="dropdown">
-                        <button id="voronoi_distance" class="dropdown-button">manhattan</button>
-                        <div class="dropdown-content" onclick="refresh()">
-                            <button>manhattan</button>
-                            <button>euclidean</button>
-                            <button>smooth</button>
-                        </div>
+                <div id="fortune" class="panel-content">
+                    <div>
+                        <label>Crosspoints: </label>
+                        <input id="voronoi_crosspoints" value="1" type="checkbox" onchange="refresh()" />
+                    </div>
+                    <div>
+                        <label>Borders: </label>
+                        <input id="voronoi_borders" value="1" type="checkbox" onchange="refresh()" />
+                    </div>
+                    <div>
+                        <label>Area: </label>
+                        <input id="voronoi_visuals" value="1" type="checkbox" onchange="refresh()" checked />
+                    </div>
+                    <div class="slider-container">
+                        <label>Radius: </label>
+                        <input type="range" id="voronoi_radius" min="10" max="300" step="10" value="90" class="slider" oninput="refresh()" />
+                        <span class="slider-value"> </span>
+                    </div>
+                    <div>
+                        <label>Colors: </label>
+                        <input id="voronoi_colored" value="1" type="checkbox" onchange="refresh()" checked />
+                    </div>
+                    <div>
+                        <label>Adaptive: </label>
+                        <input id="voronoi_adaptive" value="1" type="checkbox" onchange="refresh()" checked />
                     </div>
                 </div>
-                <div id="voronoi_smooth">
-                    <label>Degree: </label>
-                    <input id="voronoi_smooth_degree" placeholder="3" min="3" max="4" onchange="selectVoronoiType('smooth')" type="number" />
+                <div id="normal" class="panel-content dropdown">
+                    <div>
+                        <label>Distance: </label>
+                        <div class="dropdown-head">
+                            <button id="voronoi_distance" class="dropdown-button">manhattan</button>
+                            <div class="dropdown-content" onclick="refresh()">
+                                <button>manhattan</button>
+                                <button>euclidean</button>
+                                <button>smooth</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="smooth">
+                        <label>Degree: </label>
+                        <input id="voronoi_smooth_degree" placeholder="3" min="3" max="4" onchange="refresh()" type="number" />
+                    </div>
                 </div>
             </div>
 
             <div class="combined wrapper"></div>
 
-            <div class="combined">
+            <div class="combined simulation">
                 <label>QUAD:</label>
             </div>
 
-            <div class="combined quad panel-content">
+            <div class="combined quad simulation panel-content">
                 <div>
                     <label>Crosspoints: </label>
                     <input id="quad_crosspoints" value="1" type="checkbox" onchange="refresh()" />
@@ -124,7 +136,7 @@
                 </div>
                 <div>
                     <label>Capacity: </label>
-                    <input id="quad_capacity" type="number" placeholder="4" onchange="restart(true, true)" />
+                    <input id="quad_capacity" type="number" placeholder="4" onchange="refresh()" />
                 </div>
             </div>
             <div class="combined wrapper"></div>
@@ -184,21 +196,28 @@
             const dropdowns = document.querySelectorAll('.dropdown')
 
             dropdowns.forEach((dropdown) => {
-                const button = dropdown.querySelector('.dropdown-button')
-                const content = dropdown.querySelector('.dropdown-content').children
+                const dropdown_h = dropdown.querySelector('.dropdown-head')
+                const button = dropdown_h.querySelector('.dropdown-button')
+                const content = dropdown_h.querySelector('.dropdown-content').children
 
                 for (let i = 0; i < content.length; i++) {
+                    const type = content[i].innerHTML
+                    const content_panel = dropdown.querySelector('#' + type)
                     const updateSelection = () => {
-                        button.innerText = content[i].innerHTML
+                        button.innerText = type
+
+                        for (let j = 0; j < content.length; j++) {
+                            const other_panel = dropdown.querySelector('#' + content[j].innerHTML)
+                            if (other_panel) for (let i = 0; i < other_panel.children.length; i++) other_panel.children[i].classList.add('off')
+                        }
+                        if (content_panel) for (let i = 0; i < content_panel.children.length; i++) content_panel.children[i].classList.remove('off')
                     }
+
+                    if (content_panel && type != button.innerText) for (let i = 0; i < content_panel.children.length; i++) content_panel.children[i].classList.add('off')
                     content[i].addEventListener('click', updateSelection)
                 }
             })
         })
-
-        window.updateFPS = (fps) => {
-            document.getElementById('fps').innerText = fps
-        }
 
         window.hidePanel = () => {
             const children = document.getElementById('panel_main').children
@@ -206,5 +225,23 @@
         }
         window.hidePanel()
         document.oncontextmenu = document.body.oncontextmenu = () => false
+
+        window.colors = () => ({
+            SLE: getComputedStyle(document.documentElement).getPropertyValue('--secondaryLE'),
+            SL: getComputedStyle(document.documentElement).getPropertyValue('--secondaryL'),
+            SM: getComputedStyle(document.documentElement).getPropertyValue('--secondaryM'),
+            SD: getComputedStyle(document.documentElement).getPropertyValue('--secondaryD'),
+            PL: getComputedStyle(document.documentElement).getPropertyValue('--primaryL'),
+            PM: getComputedStyle(document.documentElement).getPropertyValue('--primaryM'),
+            PD: getComputedStyle(document.documentElement).getPropertyValue('--primaryD'),
+            WL: getComputedStyle(document.documentElement).getPropertyValue('--whiteL'),
+            WD: getComputedStyle(document.documentElement).getPropertyValue('--whiteD'),
+            DL: getComputedStyle(document.documentElement).getPropertyValue('--darkL'),
+            DM: getComputedStyle(document.documentElement).getPropertyValue('--darkM'),
+            DD: getComputedStyle(document.documentElement).getPropertyValue('--darkD'),
+            GREEN: getComputedStyle(document.documentElement).getPropertyValue('--green'),
+            RED: getComputedStyle(document.documentElement).getPropertyValue('--red'),
+            BROWN: getComputedStyle(document.documentElement).getPropertyValue('--brown'),
+        })
     </script>
 </html>

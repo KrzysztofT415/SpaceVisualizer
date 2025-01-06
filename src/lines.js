@@ -8,7 +8,14 @@ class Line {
         this.anchorEnd = null
     }
 
-    renderLine = (ctx, a, b, c) => {
+    *[Symbol.iterator]() {
+        yield this.start
+        yield this.end
+        yield this.anchorStart
+        yield this.anchorEnd
+    }
+
+    renderLine(ctx, a, b, c) {
         ctx.beginPath()
         ctx.moveTo(a.x, a.y)
         ctx.lineTo(b.x, b.y)
@@ -17,13 +24,13 @@ class Line {
         ctx.stroke()
     }
 
-    renderLinear = (ctx) => {
+    renderLinear(ctx) {
         this.renderLine(ctx, this.start, this.end, window.colors().WL)
     }
 
-    renderBezier = (ctx) => {
-        if (this.anchorStart == null) this.anchorStart = window.addParticle()
-        if (this.anchorEnd == null) this.anchorEnd = window.addParticle()
+    renderBezier(ctx) {
+        if (this.anchorStart == null) this.anchorStart = window.addParticle({ r: RADIUS })
+        if (this.anchorEnd == null) this.anchorEnd = window.addParticle({ r: RADIUS })
 
         this.renderLine(ctx, this.start, this.anchorStart, window.colors().BROWN)
         this.renderLine(ctx, this.end, this.anchorEnd, window.colors().BROWN)
@@ -33,15 +40,15 @@ class Line {
         ctx.strokeStyle = window.colors().WL
         ctx.lineWidth = 3
         ctx.stroke()
-        window.drawCircle(this.anchorStart.x, this.anchorStart.y, RADIUS, window.colors().DL)
-        window.drawCircle(this.anchorEnd.x, this.anchorEnd.y, RADIUS, window.colors().DL)
+        this.anchorStart.draw({ c: window.colors().DL })
+        this.anchorEnd.draw({ c: window.colors().DL })
     }
 
-    render = (ctx, type) => {
+    render(ctx, type) {
         if (type == 'linear') this.renderLinear(ctx)
         else this.renderBezier(ctx)
-        window.drawCircle(this.start.x, this.start.y, RADIUS, window.colors().RED)
-        window.drawCircle(this.end.x, this.end.y, RADIUS, window.colors().RED)
+        this.start.draw({ r: RADIUS, c: window.colors().RED })
+        this.end.draw({ r: RADIUS, c: window.colors().RED })
     }
 }
 
@@ -50,25 +57,27 @@ export class LineSpace {
         this.width = width
         this.height = height
 
-        let a = window.makeRandomParticle()
-        let b = window.makeRandomParticle()
-        let c = window.makeRandomParticle()
+        let a = window.makeRandomParticle({ r: RADIUS })
+        let b = window.makeRandomParticle({ r: RADIUS })
+        let c = window.makeRandomParticle({ r: RADIUS })
         this.points = [a, b, c]
         this.lines = [new Line(a, b), new Line(b, c)]
         this.tmp = []
         this.mirrorMode = false
+        this.unlockMode = false
     }
 
-    addParticle = (p) => this.points.push(p)
+    addParticles = (...particles) => this.points.push(...particles)
 
     update = () => {
         for (const p of [...this.points]) p.update()
     }
 
     render = (ctx, params) => {
-        for (const point of this.points) window.drawCircle(point.x, point.y, RADIUS, window.colors().DL)
+        for (const point of this.points) point.draw({ r: RADIUS, c: window.colors().DL })
         for (const line of this.lines) line.render(ctx, params.type)
         for (const render of this.tmp) render(ctx)
+        console.log(this.points, this.lines, this.tmp)
     }
 
     isInsideCircle = (p, x, y, r = RADIUS) => {
@@ -79,6 +88,7 @@ export class LineSpace {
 
     findLine = (start, end) => this.lines.findIndex((line) => (line.start == start && line.end == end) || (line.start == end && line.end == start))
     findLineOfPoint = (point) => this.lines.findIndex((line) => line.start == point || line.end == point || line.anchorStart == point || line.anchorEnd == point)
+    getLinesOfPoint = (point) => this.lines.filter((line) => line.start == point || line.end == point || line.anchorStart == point || line.anchorEnd == point)
     findPoint = (x, y) => this.points.findIndex((point) => this.isInsideCircle(point, x, y))
     findPointExcept = (x, y, i) => this.points.findIndex((point, index) => this.isInsideCircle(point, x, y) && index != i)
 
@@ -86,6 +96,18 @@ export class LineSpace {
         const start_id = this.findPoint(mouseX, mouseY)
         if (start_id !== -1) {
             const start = this.points[start_id]
+            if (this.unlockMode) {
+                for (const line of this.getLinesOfPoint(start)) {
+                    if (line.start == start || line.end == start) {
+                        if (line.start == start && line.end == start) {
+                            line.end = window.addParticle({ r: RADIUS })
+                        }
+                    }
+                    if (line.anchorStart == start) line.anchorStart = window.addParticle({ r: RADIUS })
+                    if (line.anchorEnd == start) line.anchorEnd = window.addParticle({ r: RADIUS })
+                }
+            }
+
             const ox = mouseX - start.x
             const oy = mouseY - start.y
             let ax, ay, a1x, a1y, a2x, a2y
@@ -128,11 +150,11 @@ export class LineSpace {
                     if (end_id != -1) {
                         const end = this.points[end_id]
                         if (this.mirrorMode) {
+                            let [middle, other] = [null, null]
                             const id_tmp_1 = this.lines.findIndex((line) => line.anchorStart == start)
                             const id_tmp_2 = this.lines.findIndex((line) => line.anchorStart == end)
                             const id_tmp_3 = this.lines.findIndex((line) => line.anchorEnd == start)
                             const id_tmp_4 = this.lines.findIndex((line) => line.anchorEnd == end)
-                            let [middle, other] = [null, null]
                             if (id_tmp_1 != -1) [middle, other] = [this.lines[id_tmp_1].start, start]
                             else if (id_tmp_2 != -1) [middle, other] = [this.lines[id_tmp_2].start, end]
                             else if (id_tmp_3 != -1) [middle, other] = [this.lines[id_tmp_3].end, start]
@@ -208,8 +230,12 @@ export class LineSpace {
 
     addPoint = (mouseX, mouseY) => {
         const id = this.findPoint(mouseX, mouseY)
-        if (id != -1 && this.findLineOfPoint(this.points[id]) == -1) this.points.splice(id, 1)
-        else window.addParticle(mouseX, mouseY)
+        if (id != -1) {
+            const lines = this.getLinesOfPoint(this.points[id])
+            lines.forEach((line) => (this.points = this.points.filter((point) => [...line].includes(point))))
+            this.lines = this.lines.filter((line) => !lines.includes(line))
+            this.points.splice(id, 1)
+        } else window.addParticle({ x: mouseX, y: mouseY, r: RADIUS })
         window.refresh()
     }
 
@@ -225,6 +251,9 @@ export class LineSpace {
         if (e.key == 'Shift') {
             this.mirrorMode = true
             document.addEventListener('keyup', () => (this.mirrorMode = false), { once: true })
+        } else if (e.key == 'Control') {
+            this.unlockMode = true
+            document.addEventListener('keyup', () => (this.unlockMode = false), { once: true })
         }
     }
 

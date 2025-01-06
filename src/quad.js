@@ -1,7 +1,9 @@
 import { QuadTree } from './libs/data_structures/quadtree.js'
 
 export class QuadTreeSpace extends QuadTree {
-    addParticle = (particle) => this.insert(particle.x, particle.y, particle)
+    addParticles = (...particles) => {
+        for (const particle of particles) this.insert(particle.x, particle.y, particle)
+    }
 
     update = () => {
         for (const point of this.getData()) {
@@ -15,6 +17,8 @@ export class QuadTreeSpace extends QuadTree {
     }
 
     render = (ctx, params) => {
+        if (params.capacity != this.root.capacity) this.changeCapacity(params.capacity)
+
         if (params.showBorders) this.renderBorders(ctx)
         if (params.showCounters) this.renderCounters(ctx)
         if (params.showPoints) this.renderPoints()
@@ -23,25 +27,25 @@ export class QuadTreeSpace extends QuadTree {
 
     renderBorders(ctx) {
         ctx.strokeStyle = window.colors().DD
-        for (const c of this.getNodes()) ctx.strokeRect(...c.boundary)
+        for (const node of this.getNodes()) ctx.strokeRect(...node.boundary)
     }
 
     renderCounters(ctx) {
         ctx.fillStyle = window.colors().WD
         ctx.font = '16px Arial'
-        for (const c of this.getNodes()) {
-            if (c.isLeaf()) {
-                let [x, y, _, h] = [...c.boundary]
-                ctx.fillText(`${c.data_stored.length}`, x + 2, y + h - 2)
+        for (const node of this.getNodes()) {
+            if (node.isLeaf()) {
+                let [x, y, _, h] = [...node.boundary]
+                ctx.fillText(`${node.data_stored.length}`, x + 2, y + h - 2)
             }
         }
     }
 
-    renderPoints = () => this.getData().forEach((p) => window.drawCircle(p.x, p.y, 2, window.colors().PL))
+    renderPoints = () => this.getData().forEach((p) => p.data_stored.draw({ c: window.colors().PL }))
 
     renderCrosspoints = () => {
-        for (const c of this.getNodes()) {
-            let [x, y, w, h] = [...c.boundary]
+        for (const node of this.getNodes()) {
+            let [x, y, w, h] = [...node.boundary]
             window.drawCircle(x, y, 2, window.colors().PD)
             window.drawCircle(x + w, y, 2, window.colors().PD)
             window.drawCircle(x, y + h, 2, window.colors().PD)
@@ -51,7 +55,7 @@ export class QuadTreeSpace extends QuadTree {
 
     attachedClick = (e) => {
         const r = canvas.getBoundingClientRect()
-        window.addParticle(e.clientX - r.left, e.clientY - r.top)
+        window.addParticle({ x: e.clientX - r.left, y: e.clientY - r.top })
         window.refresh()
     }
 

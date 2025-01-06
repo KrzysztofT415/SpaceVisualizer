@@ -3,15 +3,15 @@ export class CombinedSpace {
         this.sub_modules = sub_modules
     }
 
-    addParticle = (particle) => this.sub_modules.forEach((module) => module.space.addParticle(particle))
+    addParticles = (...particles) => this.sub_modules.forEach((module) => module.space.addParticles(...particles))
 
     update = () => this.sub_modules.forEach((module) => module.space.update())
 
-    render = (ctx, params) => this.sub_modules.forEach((module) => module.space.render(ctx, module.getParams()))
+    render = (ctx, params) => this.sub_modules.forEach((module, index) => module.space.render(ctx, { ...module.getParams(), showPoints: params.showPoints && index == this.sub_modules.length - 1 }))
 
     attachedClick = (e) => {
         const r = canvas.getBoundingClientRect()
-        window.addParticle(e.clientX - r.left, e.clientY - r.top)
+        window.addParticle({ x: e.clientX - r.left, y: e.clientY - r.top })
         window.refresh()
     }
 
